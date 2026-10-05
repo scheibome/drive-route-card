@@ -15,6 +15,8 @@ jobs:
       - uses: home-assistant/actions/hassfest@master
 
   hacs:
+    # HACS reads files through public GitHub URLs, so it can't validate a private repo.
+    if: ${{ !github.event.repository.private }}
     runs-on: ubuntu-latest
     steps:
       - uses: hacs/action@main
