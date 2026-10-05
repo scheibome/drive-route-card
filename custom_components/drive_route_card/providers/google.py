@@ -10,7 +10,7 @@ from typing import Any
 
 import aiohttp
 
-from ..const import MAX_ROUTES, TRAFFIC_AWARE_MODES
+from ..const import LOGGER, MAX_ROUTES, TRAFFIC_AWARE_MODES
 from .base import (
     Coordinates,
     ProviderAuthError,
@@ -130,4 +130,7 @@ class GoogleRoutesProvider(RouteProvider):
             raise ProviderError(message)
 
         routes = (payload or {}).get("routes", [])
+        # Google decides how many alternatives it returns; this helps explain
+        # differences to the Google Maps app.
+        LOGGER.debug("Google Routes API returned %d route(s)", len(routes))
         return [_parse_route(route) for route in routes[:MAX_ROUTES]]

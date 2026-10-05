@@ -1,7 +1,7 @@
 import { LitElement, css, html, nothing } from "lit";
 import { property, state } from "lit/decorators.js";
 
-import { EDITOR_DEFAULTS, normalizeConfig } from "./config.ts";
+import { EDITOR_DEFAULTS, normalizeConfig, toRgb } from "./config.ts";
 import { findRouteSensors } from "./entities.ts";
 import { localize, type StringKey } from "./localize.ts";
 import type { DriveRouteCardConfig, HomeAssistant } from "./types.ts";
@@ -74,6 +74,15 @@ class DriveRouteCardEditor extends LitElement {
         schema: [
           { name: "show_alternatives", selector: { boolean: {} } },
           { name: "show_legend", selector: { boolean: {} } },
+          { name: "show_labels", selector: { boolean: {} } },
+        ],
+      },
+      {
+        name: "",
+        type: "grid",
+        schema: [
+          { name: "fastest_color", selector: { color_rgb: {} } },
+          { name: "alternative_color", selector: { color_rgb: {} } },
         ],
       },
     ];
@@ -90,7 +99,12 @@ class DriveRouteCardEditor extends LitElement {
         : html`<div class="hint">${localize(lang, "editor_no_sensors")}</div>`}
       <ha-form
         .hass=${this.hass}
-        .data=${{ ...EDITOR_DEFAULTS, ...this._config }}
+        .data=${{
+          ...EDITOR_DEFAULTS,
+          ...this._config,
+          fastest_color: toRgb(this._config.fastest_color),
+          alternative_color: toRgb(this._config.alternative_color),
+        }}
         .schema=${this._schema(routeSensors)}
         .computeLabel=${(item: SchemaItem) => localize(lang, `editor_${item.name}` as StringKey)}
         .computeHelper=${(item: SchemaItem) => this._helper(lang, item.name)}

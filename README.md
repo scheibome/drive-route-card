@@ -82,9 +82,24 @@ title: Commute          # optional
 height: 400             # optional, pixels
 show_alternatives: true # optional
 show_legend: true       # optional
+show_labels: true       # optional, time and distance bubbles on the routes
+fastest_color: "#1a73e8"     # optional, default: theme primary color
+alternative_color: "#8ab4f8" # optional, default: gray
 ```
 
-The fastest route is drawn in the theme's primary color and the alternatives in gray.
+The fastest route is drawn in the theme's primary color and the alternatives in gray, unless you set your own colors (any CSS color, or pick them in the editor). Like in Google Maps, each route is labelled with its travel time and distance. The fastest time is shown in green and routes delayed by at least 5 minutes in red.
+
+Until an API key is set, the card shows a sketch of the routes instead of the map. This sketch is also what the card picker shows as preview.
+
+### Fewer routes than in Google Maps?
+
+The Routes API decides how many alternatives it returns, and it often returns fewer or different routes than the Google Maps app. "Avoid highways" or "Avoid tolls" also remove routes. To see how many routes Google returned, enable debug logging:
+
+```yaml
+logger:
+  logs:
+    custom_components.drive_route_card: debug
+```
 
 ## Development
 

@@ -1,6 +1,24 @@
 const CALLBACK = "__driveRouteCardMapsLoaded";
 
 let loader: Promise<void> | undefined;
+let authFailed = false;
+const authListeners = new Set<() => void>();
+
+// Google calls this global when it rejects the key (invalid, wrong referrer,
+// API not enabled, no billing). The exact reason only goes to the console.
+const previousAuthFailure = (window as unknown as { gm_authFailure?: () => void }).gm_authFailure;
+(window as unknown as { gm_authFailure: () => void }).gm_authFailure = () => {
+  authFailed = true;
+  authListeners.forEach((listener) => listener());
+  previousAuthFailure?.();
+};
+
+/** Subscribe to key rejections; fires immediately if one already happened. Returns an unsubscribe function. */
+export function onAuthFailure(listener: () => void): () => void {
+  authListeners.add(listener);
+  if (authFailed) listener();
+  return () => authListeners.delete(listener);
+}
 
 /**
  * Load the Maps JavaScript API once per page. Other cards may already have

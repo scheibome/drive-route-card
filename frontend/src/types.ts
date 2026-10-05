@@ -23,6 +23,12 @@ export interface DriveRouteCardConfig {
   height?: number;
   show_alternatives?: boolean;
   show_legend?: boolean;
+  /** Time/distance bubbles on the routes, like Google Maps. */
+  show_labels?: boolean;
+  /** Any CSS color, or [r, g, b] from the editor. Defaults to the theme's primary color. */
+  fastest_color?: string | number[];
+  /** Any CSS color, or [r, g, b] from the editor. Defaults to gray. */
+  alternative_color?: string | number[];
 }
 
 /** Shape of one item in the sensor's `routes` attribute (see sensor.py). */
