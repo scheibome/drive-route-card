@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320.000 240" width="320.000" height="240" role="img" aria-label="Drive Route Card Symbol" style="color:#2563EB" shape-rendering="geometricPrecision">
+
+  <g fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="14" y="14" width="292" height="212" rx="24"/>
+    <path d="M56 180 L108 167 L156 106 L202 98 L267 43"/>
+    <path d="M58 134 L177 65" stroke-width="7" stroke-dasharray="10 13"/>
+    <path d="M149 198 L265 131" stroke-width="7" stroke-dasharray="10 13"/>
+  </g>
+  <circle cx="56" cy="180" r="17" fill="currentColor"/>
+  <path d="M251 39 L283 34 L274 66 Z" fill="currentColor" stroke="currentColor" stroke-width="5" stroke-linejoin="round"/>
+</svg>

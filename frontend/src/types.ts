@@ -29,6 +29,16 @@ export interface DriveRouteCardConfig {
   fastest_color?: string | number[];
   /** Any CSS color, or [r, g, b] from the editor. Defaults to gray. */
   alternative_color?: string | number[];
+  /** Initial map type; can be switched on the map unless show_controls is false. */
+  map_type?: "roadmap" | "satellite" | "hybrid" | "terrain";
+  /** Show Google's live traffic layer initially; toggled with the map's traffic button. */
+  show_traffic?: boolean;
+  /** Map type switch and traffic button on the map. */
+  show_controls?: boolean;
+  /** Google JSON map styling: a list of { featureType, elementType, stylers } rules, or that JSON as a string. */
+  map_style?: unknown;
+  /** Map ID for Google's cloud-based map styling; overrides map_style. */
+  map_id?: string;
 }
 
 /** Shape of one item in the sensor's `routes` attribute (see sensor.py). */

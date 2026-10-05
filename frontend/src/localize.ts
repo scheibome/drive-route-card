@@ -18,6 +18,21 @@ const STRINGS = {
     editor_show_legend: "Show legend",
     editor_show_labels: "Show time and distance on the routes",
     editor_fastest_color: "Fastest route color",
+    editor_height_helper: "Ignored in panel view, where the card fills the whole height.",
+    editor_map_type: "Map type",
+    editor_map_style: "Map style (JSON)",
+    editor_map_style_helper:
+      "Google's JSON styling: a list of rules with featureType, elementType and stylers. Paste the JSON from Google's styling wizard or snazzymaps.com.",
+    editor_map_id: "Map ID (cloud styling)",
+    editor_map_id_helper:
+      "Optional map ID from the Google Cloud console. When set, Google applies the cloud style and ignores the JSON style.",
+    editor_show_traffic: "Show traffic",
+    editor_show_controls: "Show map type and traffic buttons on the map",
+    map_type_roadmap: "Map",
+    map_type_satellite: "Satellite",
+    map_type_hybrid: "Satellite with labels",
+    map_type_terrain: "Terrain",
+    traffic: "Traffic",
     editor_alternative_color: "Alternative routes color",
     editor_no_sensors:
       "No route sensors found. Add a route under Settings → Devices & services → Drive Route Card first.",
@@ -41,6 +56,21 @@ const STRINGS = {
     editor_show_legend: "Legende anzeigen",
     editor_show_labels: "Fahrzeit und Distanz an den Routen anzeigen",
     editor_fastest_color: "Farbe der schnellsten Route",
+    editor_height_helper: "Wird in der Panel-Ansicht ignoriert, dort füllt die Karte die volle Höhe.",
+    editor_map_type: "Kartentyp",
+    editor_map_style: "Kartenstil (JSON)",
+    editor_map_style_helper:
+      "Googles JSON-Styling: eine Liste von Regeln mit featureType, elementType und stylers. Füge das JSON aus Googles Styling-Assistent oder von snazzymaps.com ein.",
+    editor_map_id: "Map-ID (Cloud-Styling)",
+    editor_map_id_helper:
+      "Optionale Map-ID aus der Google Cloud Console. Ist sie gesetzt, verwendet Google den Cloud-Stil und ignoriert den JSON-Stil.",
+    editor_show_traffic: "Verkehrslage anzeigen",
+    editor_show_controls: "Kartentyp- und Verkehr-Knöpfe auf der Karte anzeigen",
+    map_type_roadmap: "Karte",
+    map_type_satellite: "Satellit",
+    map_type_hybrid: "Satellit mit Beschriftung",
+    map_type_terrain: "Gelände",
+    traffic: "Verkehr",
     editor_alternative_color: "Farbe der Alternativrouten",
     editor_no_sensors:
       "Keine Routen-Sensoren gefunden. Lege zuerst unter Einstellungen → Geräte & Dienste → Drive Route Card eine Route an.",

@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="images/logo.svg" alt="Drive Route Card logo" width="160">
+</p>
+
 # Drive Route Card
 
 A Home Assistant integration that shows the current fastest route between two places together with up to two alternatives. It provides:
@@ -83,11 +87,29 @@ height: 400             # optional, pixels
 show_alternatives: true # optional
 show_legend: true       # optional
 show_labels: true       # optional, time and distance bubbles on the routes
-fastest_color: "#1a73e8"     # optional, default: theme primary color
-alternative_color: "#8ab4f8" # optional, default: gray
+fastest_color: "#1a73e8"     # optional, any CSS color
+alternative_color: "#8ab4f8" # optional, any CSS color
+map_type: roadmap       # optional: roadmap, satellite, hybrid, terrain
+show_traffic: false     # optional, Google's live traffic layer
+show_controls: true     # optional, map type switch and traffic button on the map
+map_id: ""              # optional, map ID for Google's cloud-based styling
+map_style:              # optional, Google's JSON map styling
+  - elementType: geometry
+    stylers:
+      - color: "#242f3e"
+  - featureType: water
+    elementType: geometry
+    stylers:
+      - color: "#17263c"
 ```
 
-The fastest route is drawn in the theme's primary color and the alternatives in gray, unless you set your own colors (any CSS color, or pick them in the editor). Like in Google Maps, each route is labelled with its travel time and distance. The fastest time is shown in green and routes delayed by at least 5 minutes in red.
+By default the fastest route is dark blue and the alternatives light blue, like in Google Maps. You can set your own colors (any CSS color, or pick them in the editor). The map type and traffic layer set in the config are the initial state. With `show_controls` you can switch them on the map itself; those switches are not saved.
+
+**Map styling:** `map_style` takes Google's [JSON styling](https://developers.google.com/maps/documentation/javascript/style-reference), a list of rules with `featureType`, `elementType` and `stylers`. In the visual editor you can paste the JSON as is, for example from Google's styling wizard or snazzymaps.com. Alternatively, set `map_id` to use a style created in the Google Cloud console (cloud-based styling). When a map ID is set, Google ignores `map_style`.
+
+In a **panel view** the card fills the whole height, and `height` is ignored. While the dashboard is being edited, the card leaves room for Home Assistant's edit buttons. In a panel view the map also takes scroll and drag gestures directly; elsewhere you hold Ctrl (or use two fingers) to zoom, so the page still scrolls.
+
+Like in Google Maps, each route is labelled with its travel time and distance. The fastest time is shown in green and routes delayed by at least 5 minutes in red.
 
 Until an API key is set, the card shows a sketch of the routes instead of the map. This sketch is also what the card picker shows as preview.
 

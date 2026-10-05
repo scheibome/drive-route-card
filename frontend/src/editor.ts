@@ -8,6 +8,8 @@ import type { DriveRouteCardConfig, HomeAssistant } from "./types.ts";
 
 export const EDITOR_TYPE = "drive-route-card-editor";
 
+const MAP_TYPES = ["roadmap", "satellite", "hybrid", "terrain"] as const;
+
 interface SchemaItem {
   name: string;
   type?: "grid";
@@ -53,7 +55,7 @@ class DriveRouteCardEditor extends LitElement {
     }
   }
 
-  private _schema(routeSensors: string[]): SchemaItem[] {
+  private _schema(routeSensors: string[], lang: string): SchemaItem[] {
     return [
       {
         name: "entity",
@@ -69,14 +71,30 @@ class DriveRouteCardEditor extends LitElement {
         },
       },
       {
+        name: "map_type",
+        selector: {
+          select: {
+            mode: "dropdown",
+            options: MAP_TYPES.map((value) => ({
+              value,
+              label: localize(lang, `map_type_${value}`),
+            })),
+          },
+        },
+      },
+      {
         name: "",
         type: "grid",
         schema: [
           { name: "show_alternatives", selector: { boolean: {} } },
           { name: "show_legend", selector: { boolean: {} } },
           { name: "show_labels", selector: { boolean: {} } },
+          { name: "show_traffic", selector: { boolean: {} } },
+          { name: "show_controls", selector: { boolean: {} } },
         ],
       },
+      { name: "map_style", selector: { object: {} } },
+      { name: "map_id", selector: { text: {} } },
       {
         name: "",
         type: "grid",
@@ -102,10 +120,11 @@ class DriveRouteCardEditor extends LitElement {
         .data=${{
           ...EDITOR_DEFAULTS,
           ...this._config,
-          fastest_color: toRgb(this._config.fastest_color),
-          alternative_color: toRgb(this._config.alternative_color),
+          fastest_color: toRgb(this._config.fastest_color) ?? EDITOR_DEFAULTS.fastest_color,
+          alternative_color:
+            toRgb(this._config.alternative_color) ?? EDITOR_DEFAULTS.alternative_color,
         }}
-        .schema=${this._schema(routeSensors)}
+        .schema=${this._schema(routeSensors, lang)}
         .computeLabel=${(item: SchemaItem) => localize(lang, `editor_${item.name}` as StringKey)}
         .computeHelper=${(item: SchemaItem) => this._helper(lang, item.name)}
         @value-changed=${this._valueChanged}
@@ -114,8 +133,8 @@ class DriveRouteCardEditor extends LitElement {
   }
 
   private _helper(lang: string, name: string): string | undefined {
-    if (name === "entity" || name === "api_key") {
-      return localize(lang, `editor_${name}_helper`);
+    if (["entity", "api_key", "height", "map_style", "map_id"].includes(name)) {
+      return localize(lang, `editor_${name}_helper` as StringKey);
     }
     return undefined;
   }

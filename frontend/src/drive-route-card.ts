@@ -1,7 +1,12 @@
-import { LitElement, css, html, nothing, render, svg, unsafeCSS } from "lit";
+import { LitElement, type PropertyValues, css, html, nothing, render, svg } from "lit";
 import { property, state } from "lit/decorators.js";
 
-import { toCssColor } from "./config.ts";
+import {
+  DEFAULT_ALTERNATIVE_COLOR,
+  DEFAULT_FASTEST_COLOR,
+  parseMapStyle,
+  toCssColor,
+} from "./config.ts";
 import { EDITOR_TYPE } from "./editor.ts";
 import { findRouteSensors } from "./entities.ts";
 import { loadGoogleMaps, onAuthFailure } from "./google-maps.ts";
@@ -20,8 +25,9 @@ import {
 } from "./types.ts";
 
 const CARD_TYPE = "drive-route-card";
-const ALTERNATIVE_COLOR = "#9e9e9e";
-const FALLBACK_PRIMARY = "#03a9f4";
+/** Darker edge drawn under every route, like Google Maps. */
+const OUTLINE_COLOR = "#000000";
+const OUTLINE_OPACITY = 0.25;
 /** Delay from which a route's time is shown in red, like Google Maps. */
 const DELAYED_SECONDS = 300;
 const TRAVEL_MODE_ICONS: Record<string, string> = {
@@ -33,15 +39,28 @@ const TRAVEL_MODE_ICONS: Record<string, string> = {
 
 class DriveRouteCard extends LitElement {
   @property({ attribute: false }) hass?: HomeAssistant;
+  /** Set by HA's panel view; the card then fills the whole view height. */
+  @property({ type: Boolean, reflect: true }) isPanel = false;
+  /** True while the dashboard is edited; leaves room for HA's edit buttons in panel view. */
+  @property({ type: Boolean, reflect: true }) editMode = false;
   @state() private _config?: DriveRouteCardConfig;
   @state() private _error?: string;
   @state() private _authFailed = false;
   private _unsubscribeAuth?: () => void;
 
   private _map?: google.maps.Map;
+  private _trafficLayer?: google.maps.TrafficLayer;
+  private _trafficButton?: HTMLButtonElement;
+  /** Traffic shown right now; starts from `show_traffic`, toggled with the map button. */
+  @state() private _trafficOn = false;
   private _mapLoading = false;
   private _polylines: google.maps.Polyline[] = [];
   private _labels: google.maps.OverlayView[] = [];
+  private _appliedMapType?: string;
+  /** Map ID the current map was created with; Google can't change it afterwards. */
+  private _mapId?: string;
+  private _resizeObserver?: ResizeObserver;
+  @state() private _styleError?: string;
   /** Last fitted area; refitted when the card is resized (e.g. laid out after the map was created). */
   private _bounds?: google.maps.LatLngBounds;
   /** last_query of the drawn routes; avoids redrawing on unrelated state changes. */
@@ -61,12 +80,16 @@ class DriveRouteCard extends LitElement {
       throw new Error("Invalid configuration");
     }
     this._config = config;
+    this._trafficOn = config.show_traffic ?? false;
     this._error = undefined;
     this._drawnQuery = undefined;
   }
 
   connectedCallback(): void {
     super.connectedCallback();
+    // HA re-creates the wrappers when toggling edit mode, so checking on connect is enough.
+    // Not every HA version sets `editMode` on the card itself.
+    if (insideEditWrapper(this)) this.editMode = true;
     this._unsubscribeAuth = onAuthFailure(() => {
       this._authFailed = true;
     });
@@ -97,6 +120,9 @@ class DriveRouteCard extends LitElement {
 
   protected updated(): void {
     if (!this._config?.api_key) return;
+    if (this._map && (this._config.map_id || undefined) !== this._mapId) {
+      this._destroyMap();
+    }
     if (this._map) {
       this._drawRoutes();
     } else if (!this._mapLoading && !this._error) {
@@ -111,17 +137,31 @@ class DriveRouteCard extends LitElement {
     this._mapLoading = true;
     try {
       await loadGoogleMaps(this._config.api_key);
-      const { Map } = (await google.maps.importLibrary("maps")) as google.maps.MapsLibrary;
+      const { Map, TrafficLayer } = (await google.maps.importLibrary(
+        "maps",
+      )) as google.maps.MapsLibrary;
+      this._mapId = this._config.map_id || undefined;
       this._map = new Map(container, {
+        // Cloud-based styling; when set, Google ignores the JSON `styles`.
+        mapId: this._mapId,
         center: { lat: 0, lng: 0 },
         zoom: 2,
         disableDefaultUI: true,
         zoomControl: true,
-        gestureHandling: "cooperative",
+        gestureHandling: this._gestureHandling,
+        mapTypeControlOptions: {
+          position: google.maps.ControlPosition.TOP_LEFT,
+          mapTypeIds: ["roadmap", "satellite"],
+        },
       });
-      new ResizeObserver(() => {
+      this._trafficLayer = new TrafficLayer();
+      this._trafficButton = this._createTrafficButton();
+      this._map.controls[google.maps.ControlPosition.TOP_RIGHT].push(this._trafficButton);
+      this._applyMapOptions();
+      this._resizeObserver = new ResizeObserver(() => {
         if (this._bounds) this._map?.fitBounds(this._bounds, 32);
-      }).observe(container);
+      });
+      this._resizeObserver.observe(container);
       this._error = undefined;
       this._drawRoutes();
     } catch (err) {
@@ -131,6 +171,75 @@ class DriveRouteCard extends LitElement {
     }
   }
 
+  /** Drop the Google map so the next update creates a new one (needed when the map ID changes). */
+  private _destroyMap(): void {
+    this._resizeObserver?.disconnect();
+    this._polylines.forEach((line) => line.setMap(null));
+    this._labels.forEach((label) => label.setMap(null));
+    this._trafficLayer?.setMap(null);
+    this._polylines = [];
+    this._labels = [];
+    this._map = undefined;
+    this._trafficLayer = undefined;
+    this._trafficButton = undefined;
+    this._bounds = undefined;
+    this._appliedMapType = undefined;
+    this._drawnQuery = undefined;
+    this.renderRoot.querySelector("#map")?.replaceChildren();
+  }
+
+  /** Full-height panel map can take all gestures; elsewhere scrolling the page must keep working. */
+  private get _gestureHandling(): string {
+    return this.isPanel && !this.editMode ? "greedy" : "cooperative";
+  }
+
+  protected willUpdate(changed: PropertyValues): void {
+    if (this._map && (changed.has("isPanel") || changed.has("editMode"))) {
+      this._map.setOptions({ gestureHandling: this._gestureHandling });
+    }
+    if (this._map && (changed.has("_config") || changed.has("_trafficOn"))) {
+      this._applyMapOptions();
+    }
+  }
+
+  /** Map type, traffic layer and on-map controls; independent of the routes. */
+  private _applyMapOptions(): void {
+    const map = this._map;
+    if (!map || !this._config) return;
+    const showControls = this._config.show_controls ?? true;
+    let styles: google.maps.MapTypeStyle[] | undefined;
+    try {
+      styles = parseMapStyle(this._config.map_style);
+      this._styleError = undefined;
+    } catch (err) {
+      this._styleError = (err as Error).message;
+    }
+    // `null` resets a previously set style.
+    map.setOptions({ mapTypeControl: showControls, styles: styles ?? null });
+    // Only follow the config when it changes, so the on-map switch isn't overridden on every update.
+    const mapType = this._config.map_type ?? "roadmap";
+    if (mapType !== this._appliedMapType) {
+      this._appliedMapType = mapType;
+      map.setMapTypeId(mapType);
+    }
+    this._trafficLayer?.setMap(this._trafficOn ? map : null);
+    if (this._trafficButton) {
+      this._trafficButton.hidden = !showControls;
+      this._trafficButton.setAttribute("aria-pressed", String(this._trafficOn));
+      this._trafficButton.textContent = localize(this.hass?.language ?? "en", "traffic");
+    }
+  }
+
+  private _createTrafficButton(): HTMLButtonElement {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "map-control";
+    button.addEventListener("click", () => {
+      this._trafficOn = !this._trafficOn;
+    });
+    return button;
+  }
+
   private _drawRoutes(): void {
     const map = this._map;
     const entity = this._entity;
@@ -138,8 +247,7 @@ class DriveRouteCard extends LitElement {
 
     const { show_alternatives: showAlternativesConfig, show_labels: showLabelsConfig } =
       this._config;
-    const fastestColor = toCssColor(this._config.fastest_color);
-    const alternativeColor = toCssColor(this._config.alternative_color) ?? ALTERNATIVE_COLOR;
+    const { fastest: fastestColor, alternative: alternativeColor } = this._colors;
     const query = [
       entity.attributes.last_query,
       showAlternativesConfig,
@@ -155,10 +263,6 @@ class DriveRouteCard extends LitElement {
     this._labels.forEach((label) => label.setMap(null));
     this._labels = [];
 
-    const primary =
-      fastestColor ||
-      getComputedStyle(this).getPropertyValue("--primary-color").trim() ||
-      FALLBACK_PRIMARY;
     const fastest = this._fastestIndex;
     const showAlternatives = showAlternativesConfig ?? true;
     const bounds = new google.maps.LatLngBounds();
@@ -178,16 +282,29 @@ class DriveRouteCard extends LitElement {
         label.setMap(map);
         this._labels.push(label);
       }
+      const weight = isFastest ? 6 : 5;
+      // Fastest route on top; each route gets a darker edge drawn just below it.
+      const zIndex = isFastest ? 4 : 2;
       this._polylines.push(
         new google.maps.Polyline({
           map,
           path,
-          strokeColor: isFastest ? primary : alternativeColor,
-          strokeOpacity: isFastest ? 1 : 0.8,
-          strokeWeight: isFastest ? 6 : 4,
-          zIndex: isFastest ? 2 : 1,
+          strokeColor: OUTLINE_COLOR,
+          strokeOpacity: OUTLINE_OPACITY,
+          strokeWeight: weight + 3,
+          zIndex: zIndex - 1,
+          clickable: false,
+        }),
+        new google.maps.Polyline({
+          map,
+          path,
+          strokeColor: isFastest ? fastestColor : alternativeColor,
+          strokeOpacity: 1,
+          strokeWeight: weight,
+          zIndex,
+          clickable: false,
           // Origin and destination markers without the deprecated Marker class.
-          icons: isFastest ? endpointIcons(primary) : undefined,
+          icons: isFastest ? endpointIcons(fastestColor) : undefined,
         }),
       );
     });
@@ -225,16 +342,17 @@ class DriveRouteCard extends LitElement {
     return element;
   }
 
-  /** Configured colors as CSS variables for legend and sketch. */
+  private get _colors(): { fastest: string; alternative: string } {
+    return {
+      fastest: toCssColor(this._config?.fastest_color) ?? DEFAULT_FASTEST_COLOR,
+      alternative: toCssColor(this._config?.alternative_color) ?? DEFAULT_ALTERNATIVE_COLOR,
+    };
+  }
+
+  /** Route colors as CSS variables for legend and sketch. */
   private _colorStyle(): string {
-    const fastest = toCssColor(this._config?.fastest_color);
-    const alternative = toCssColor(this._config?.alternative_color);
-    return [
-      fastest ? `--drc-fastest-color: ${fastest}` : "",
-      alternative ? `--drc-alternative-color: ${alternative}` : "",
-    ]
-      .filter(Boolean)
-      .join("; ");
+    const { fastest, alternative } = this._colors;
+    return `--drc-fastest-color: ${fastest}; --drc-alternative-color: ${alternative}`;
   }
 
   protected render() {
@@ -247,6 +365,7 @@ class DriveRouteCard extends LitElement {
     return html`
       <ha-card .header=${this._config.title} style=${this._colorStyle()}>
         ${this._error ? html`<div class="warning">${this._error}</div>` : nothing}
+        ${this._styleError ? html`<div class="warning">${this._styleError}</div>` : nothing}
         ${this._authFailed
           ? html`<div class="warning">${localize(lang, "auth_failed")}</div>`
           : nothing}
@@ -258,7 +377,11 @@ class DriveRouteCard extends LitElement {
         ${entityId && !apiKey
           ? html`<div class="hint">${localize(lang, "no_api_key")}</div>`
           : nothing}
-        <div id="map" style="height: ${height}px" ?hidden=${!apiKey}></div>
+        <div
+          id="map"
+          style=${this.isPanel ? "" : `height: ${height}px`}
+          ?hidden=${!apiKey}
+        ></div>
         ${apiKey ? nothing : this._renderSketch(height)}
         ${this._config.show_legend ?? true ? this._renderLegend(lang) : nothing}
       </ha-card>
@@ -278,7 +401,7 @@ class DriveRouteCard extends LitElement {
     return html`
       <svg
         class="sketch"
-        style="height: ${Math.min(height, 250)}px"
+        style=${this.isPanel ? "" : `height: ${Math.min(height, 250)}px`}
         viewBox="0 0 ${sketch.width} ${sketch.height}"
         preserveAspectRatio="xMidYMid meet"
         role="img"
@@ -329,6 +452,45 @@ class DriveRouteCard extends LitElement {
     }
     ha-card {
       overflow: hidden;
+    }
+    /* Panel view: fill the view; map (or sketch) takes the space left by title, hints and legend. */
+    :host([ispanel]) {
+      display: block;
+      height: 100%;
+    }
+    :host([ispanel]) ha-card {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+    /* Leave room for the edit buttons HA shows below the card while editing. */
+    :host([ispanel][editmode]) ha-card {
+      height: calc(100% - 64px);
+    }
+    :host([ispanel]) #map,
+    :host([ispanel]) .sketch {
+      flex: 1 1 auto;
+      min-height: 200px;
+    }
+    :host([ispanel]) .legend {
+      flex: none;
+    }
+    /* Matches Google's own map controls. */
+    .map-control {
+      margin: 10px;
+      padding: 0 17px;
+      height: 40px;
+      border: none;
+      border-radius: 2px;
+      background: #ffffff;
+      color: #565656;
+      box-shadow: rgba(0, 0, 0, 0.3) 0 1px 4px -1px;
+      font: 18px Roboto, Arial, sans-serif;
+      cursor: pointer;
+    }
+    .map-control[aria-pressed="true"] {
+      color: #000000;
+      font-weight: 500;
     }
     .warning,
     .hint {
@@ -395,13 +557,13 @@ class DriveRouteCard extends LitElement {
     }
     .sketch .line {
       fill: none;
-      stroke: var(--drc-alternative-color, ${unsafeCSS(ALTERNATIVE_COLOR)});
+      stroke: var(--drc-alternative-color);
       stroke-width: 4;
       stroke-linecap: round;
       stroke-linejoin: round;
     }
     .sketch .line.fastest {
-      stroke: var(--drc-fastest-color, var(--primary-color, ${unsafeCSS(FALLBACK_PRIMARY)}));
+      stroke: var(--drc-fastest-color);
       stroke-width: 6;
     }
     .sketch .endpoint {
@@ -410,10 +572,10 @@ class DriveRouteCard extends LitElement {
     }
     .sketch .start {
       fill: #ffffff;
-      stroke: var(--drc-fastest-color, var(--primary-color, ${unsafeCSS(FALLBACK_PRIMARY)}));
+      stroke: var(--drc-fastest-color);
     }
     .sketch .end {
-      fill: var(--drc-fastest-color, var(--primary-color, ${unsafeCSS(FALLBACK_PRIMARY)}));
+      fill: var(--drc-fastest-color);
     }
     .legend {
       list-style: none;
@@ -436,10 +598,10 @@ class DriveRouteCard extends LitElement {
       width: 16px;
       height: 4px;
       border-radius: 2px;
-      background: var(--drc-alternative-color, ${unsafeCSS(ALTERNATIVE_COLOR)});
+      background: var(--drc-alternative-color);
     }
     .fastest .swatch {
-      background: var(--drc-fastest-color, var(--primary-color, ${unsafeCSS(FALLBACK_PRIMARY)}));
+      background: var(--drc-fastest-color);
     }
     .name {
       flex: 1;
@@ -471,6 +633,18 @@ function endpointIcons(color: string): google.maps.IconSequence[] {
     { icon: icon("#ffffff"), offset: "0%" },
     { icon: icon(color), offset: "100%" },
   ];
+}
+
+/** HA wraps cards in these elements while a dashboard is edited (panel/masonry and sections). */
+const EDIT_WRAPPERS = new Set(["HUI-CARD-OPTIONS", "HUI-CARD-EDIT-MODE"]);
+
+function insideEditWrapper(element: Element): boolean {
+  let node: Node | null = element;
+  for (let depth = 0; node && depth < 10; depth++) {
+    if (node instanceof Element && EDIT_WRAPPERS.has(node.tagName)) return true;
+    node = node.parentNode ?? (node instanceof ShadowRoot ? node.host : null);
+  }
+  return false;
 }
 
 function formatMinutes(seconds: number): string {
