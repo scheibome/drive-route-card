@@ -22,5 +22,3 @@ jobs:
       - uses: hacs/action@main
         with:
           category: integration
-          # Remove once the integration is added to home-assistant/brands.
-          ignore: brands
