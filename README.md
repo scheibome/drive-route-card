@@ -70,6 +70,10 @@ Queries immediately, even outside the time window. Pass `config_entry_id` to ref
 
 ## Card
 
+Add the card from the dashboard's card picker (*Drive Route Card*) and configure it in the visual editor. The route picker only lists the *Fastest travel time* sensors of this integration.
+
+Or configure it in YAML:
+
 ```yaml
 type: custom:drive-route-card
 entity: sensor.commute_fastest_travel_time

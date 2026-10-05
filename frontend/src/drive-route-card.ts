@@ -1,19 +1,21 @@
 import { LitElement, css, html, nothing, unsafeCSS } from "lit";
 import { property, state } from "lit/decorators.js";
 
+import { EDITOR_TYPE } from "./editor.ts";
+import { findRouteSensors } from "./entities.ts";
 import { loadGoogleMaps } from "./google-maps.ts";
 import { localize } from "./localize.ts";
 import { decodePolyline } from "./polyline.ts";
-import type {
-  DriveRouteCardConfig,
-  HassEntity,
-  HomeAssistant,
-  Position,
-  RouteAttribute,
+import {
+  DEFAULT_HEIGHT,
+  type DriveRouteCardConfig,
+  type HassEntity,
+  type HomeAssistant,
+  type Position,
+  type RouteAttribute,
 } from "./types.ts";
 
 const CARD_TYPE = "drive-route-card";
-const DEFAULT_HEIGHT = 400;
 const ALTERNATIVE_COLOR = "#9e9e9e";
 const FALLBACK_PRIMARY = "#03a9f4";
 
@@ -28,16 +30,18 @@ class DriveRouteCard extends LitElement {
   /** last_query of the drawn routes; avoids redrawing on unrelated state changes. */
   private _drawnQuery?: string;
 
-  static getStubConfig(): Partial<DriveRouteCardConfig> {
-    return { entity: "", api_key: "" };
+  static getConfigElement(): HTMLElement {
+    return document.createElement(EDITOR_TYPE);
+  }
+
+  static getStubConfig(hass: HomeAssistant): Partial<DriveRouteCardConfig> {
+    // Missing entity/api_key are shown as hints, so the card can be set up in the editor.
+    return { entity: findRouteSensors(hass)[0] ?? "", api_key: "" };
   }
 
   setConfig(config: DriveRouteCardConfig): void {
-    if (!config.entity) {
-      throw new Error("'entity' is required (the fastest travel time sensor)");
-    }
-    if (!config.api_key) {
-      throw new Error("'api_key' is required (Maps JavaScript API browser key)");
+    if (!config || typeof config !== "object") {
+      throw new Error("Invalid configuration");
     }
     this._config = config;
     this._error = undefined;
@@ -49,7 +53,8 @@ class DriveRouteCard extends LitElement {
   }
 
   private get _entity(): HassEntity | undefined {
-    return this._config ? this.hass?.states[this._config.entity] : undefined;
+    const entityId = this._config?.entity;
+    return entityId ? this.hass?.states[entityId] : undefined;
   }
 
   private get _routes(): RouteAttribute[] {
@@ -62,7 +67,7 @@ class DriveRouteCard extends LitElement {
   }
 
   protected updated(): void {
-    if (!this._config) return;
+    if (!this._config?.api_key) return;
     if (this._map) {
       this._drawRoutes();
     } else if (!this._mapLoading && !this._error) {
@@ -73,7 +78,7 @@ class DriveRouteCard extends LitElement {
 
   private async _initMap(): Promise<void> {
     const container = this.renderRoot.querySelector<HTMLElement>("#map");
-    if (!container || !this._config) return;
+    if (!container || !this._config?.api_key) return;
     this._mapLoading = true;
     try {
       await loadGoogleMaps(this._config.api_key);
@@ -147,14 +152,18 @@ class DriveRouteCard extends LitElement {
     const entity = this._entity;
     const height = this._config.height ?? DEFAULT_HEIGHT;
     const lang = this.hass.language;
+    const { entity: entityId, api_key: apiKey } = this._config;
 
     return html`
       <ha-card .header=${this._config.title}>
         ${this._error ? html`<div class="warning">${this._error}</div>` : nothing}
-        ${!entity
-          ? html`<div class="warning">${localize(lang, "entity_missing")}: ${this._config.entity}</div>`
-          : nothing}
-        <div id="map" style="height: ${height}px"></div>
+        ${!entityId
+          ? html`<div class="hint">${localize(lang, "no_entity")}</div>`
+          : !entity
+            ? html`<div class="warning">${localize(lang, "entity_missing")}: ${entityId}</div>`
+            : nothing}
+        ${!apiKey ? html`<div class="hint">${localize(lang, "no_api_key")}</div>` : nothing}
+        <div id="map" style="height: ${height}px" ?hidden=${!apiKey}></div>
         ${this._config.show_legend ?? true ? this._renderLegend(lang) : nothing}
       </ha-card>
     `;
@@ -194,9 +203,16 @@ class DriveRouteCard extends LitElement {
     ha-card {
       overflow: hidden;
     }
-    .warning {
+    .warning,
+    .hint {
       padding: 8px 16px;
       color: var(--error-color);
+    }
+    .hint {
+      color: var(--secondary-text-color);
+    }
+    [hidden] {
+      display: none;
     }
     .legend {
       list-style: none;

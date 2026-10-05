@@ -1,3 +1,5 @@
+export const DEFAULT_HEIGHT = 400;
+
 /** Minimal subset of Home Assistant's frontend types used by the card. */
 export interface HassEntity {
   entity_id: string;
@@ -13,9 +15,9 @@ export interface HomeAssistant {
 export interface DriveRouteCardConfig {
   type: string;
   /** The integration's "fastest travel time" sensor; it carries the map data. */
-  entity: string;
+  entity?: string;
   /** Browser key for the Maps JavaScript API (restrict it to your HA URL). */
-  api_key: string;
+  api_key?: string;
   title?: string;
   /** Map height in pixels. */
   height?: number;
