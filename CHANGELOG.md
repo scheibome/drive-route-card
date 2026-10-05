@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-10-05
+
 ### Changed
 
 - Reworked the README: screenshots, requirements, all options with defaults, entity names and attributes, badge setup, card options table and a troubleshooting section.
@@ -62,7 +64,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Lovelace card with visual editor that draws all routes on Google Maps. It is bundled with the integration, so no extra dashboard resource is needed.
 - English and German translations.
 
-[Unreleased]: https://github.com/scheibome/drive-route-card/compare/v0.3.1...HEAD
+[Unreleased]: https://github.com/scheibome/drive-route-card/compare/v0.3.2...HEAD
+[0.3.2]: https://github.com/scheibome/drive-route-card/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/scheibome/drive-route-card/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/scheibome/drive-route-card/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/scheibome/drive-route-card/compare/v0.1.0...v0.2.0
