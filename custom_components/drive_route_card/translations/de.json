@@ -1,0 +1,129 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Route hinzufügen",
+        "description": "Die Fahrzeiten werden über die Google Routes API abgefragt. Google berechnet jede Abfrage; prüfe dein monatliches Freikontingent.",
+        "data": {
+          "name": "Name",
+          "api_key": "Google-Maps-API-Key",
+          "origin": "Start",
+          "destination": "Ziel",
+          "travel_mode": "Verkehrsmittel",
+          "avoid_tolls": "Maut vermeiden",
+          "avoid_highways": "Autobahnen vermeiden"
+        },
+        "data_description": {
+          "name": "Wird als Gerätename angezeigt, z. B. „Arbeitsweg“.",
+          "api_key": "Server-Key mit aktivierter Routes API.",
+          "origin": "Eine Zone, Person oder ein Device-Tracker.",
+          "destination": "Eine Zone, Person oder ein Device-Tracker."
+        }
+      },
+      "reauth_confirm": {
+        "title": "API-Key aktualisieren",
+        "description": "Google hat den API-Key abgelehnt. Gib einen gültigen Key mit aktivierter Routes API ein.",
+        "data": {
+          "api_key": "Google-Maps-API-Key"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Google hat den API-Key abgelehnt.",
+      "cannot_connect": "Die Google Routes API ist nicht erreichbar.",
+      "same_location": "Start und Ziel müssen sich unterscheiden.",
+      "unknown": "Unerwarteter Fehler."
+    },
+    "abort": {
+      "reauth_successful": "API-Key aktualisiert."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "travel_mode": "Verkehrsmittel",
+          "avoid_tolls": "Maut vermeiden",
+          "avoid_highways": "Autobahnen vermeiden",
+          "scan_interval": "Abfrageintervall",
+          "window_enabled": "Nur in einem Zeitfenster abfragen",
+          "window_start": "Beginn des Zeitfensters",
+          "window_end": "Ende des Zeitfensters",
+          "weekdays": "Wochentage"
+        },
+        "data_description": {
+          "travel_mode": "Live-Verkehr wird nur für Auto und Motorrad berücksichtigt.",
+          "scan_interval": "Google berechnet jede Abfrage. Alle 10 Minuten rund um die Uhr sind etwa 4.300 Abfragen pro Monat.",
+          "window_enabled": "Außerhalb des Zeitfensters bleibt das letzte Ergebnis stehen. Die Aktion „Routen aktualisieren“ fragt immer ab.",
+          "window_end": "Das Zeitfenster darf über Mitternacht gehen (z. B. 22:00 bis 02:00)."
+        }
+      }
+    }
+  },
+  "selector": {
+    "travel_mode": {
+      "options": {
+        "drive": "Auto",
+        "two_wheeler": "Motorrad / Roller",
+        "bicycle": "Fahrrad",
+        "walk": "Zu Fuß"
+      }
+    },
+    "weekdays": {
+      "options": {
+        "mon": "Montag",
+        "tue": "Dienstag",
+        "wed": "Mittwoch",
+        "thu": "Donnerstag",
+        "fri": "Freitag",
+        "sat": "Samstag",
+        "sun": "Sonntag"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "fastest_duration": {
+        "name": "Schnellste Fahrzeit"
+      },
+      "slowest_duration": {
+        "name": "Langsamste Fahrzeit"
+      },
+      "route_duration": {
+        "name": "Route {route} Fahrzeit"
+      },
+      "route_delay": {
+        "name": "Route {route} Verkehrsverzögerung"
+      },
+      "route_distance": {
+        "name": "Route {route} Distanz"
+      }
+    }
+  },
+  "exceptions": {
+    "location_unavailable": {
+      "message": "Für {entity_id} ist keine Position verfügbar."
+    },
+    "invalid_auth": {
+      "message": "Google hat den API-Key abgelehnt: {error}"
+    },
+    "update_failed": {
+      "message": "Routenabfrage fehlgeschlagen: {error}"
+    },
+    "entry_not_loaded": {
+      "message": "Kein geladener Drive-Route-Card-Eintrag mit der ID {entry_id}."
+    }
+  },
+  "services": {
+    "refresh": {
+      "name": "Routen aktualisieren",
+      "description": "Fragt die Routen sofort ab, auch außerhalb des Zeitfensters.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Route",
+          "description": "Nur diese Route aktualisieren. Leer lassen, um alle zu aktualisieren."
+        }
+      }
+    }
+  }
+}

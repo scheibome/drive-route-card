@@ -1,0 +1,129 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Add route",
+        "description": "Travel times are queried from the Google Routes API. Each query is billed by Google; check your free monthly quota.",
+        "data": {
+          "name": "Name",
+          "api_key": "Google Maps API key",
+          "origin": "Origin",
+          "destination": "Destination",
+          "travel_mode": "Travel mode",
+          "avoid_tolls": "Avoid tolls",
+          "avoid_highways": "Avoid highways"
+        },
+        "data_description": {
+          "name": "Shown as device name, e.g. \"Commute\".",
+          "api_key": "Server key with the Routes API enabled.",
+          "origin": "A zone, person or device tracker.",
+          "destination": "A zone, person or device tracker."
+        }
+      },
+      "reauth_confirm": {
+        "title": "Update API key",
+        "description": "Google rejected the API key. Enter a valid key with the Routes API enabled.",
+        "data": {
+          "api_key": "Google Maps API key"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Google rejected the API key.",
+      "cannot_connect": "Could not reach the Google Routes API.",
+      "same_location": "Origin and destination must be different.",
+      "unknown": "Unexpected error."
+    },
+    "abort": {
+      "reauth_successful": "API key updated."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "travel_mode": "Travel mode",
+          "avoid_tolls": "Avoid tolls",
+          "avoid_highways": "Avoid highways",
+          "scan_interval": "Update interval",
+          "window_enabled": "Only update within a time window",
+          "window_start": "Window start",
+          "window_end": "Window end",
+          "weekdays": "Weekdays"
+        },
+        "data_description": {
+          "travel_mode": "Live traffic is only considered for car and motorcycle.",
+          "scan_interval": "Every query is billed by Google. 10 minutes around the clock are about 4,300 queries per month.",
+          "window_enabled": "Outside the window the last result is kept. The refresh action always queries.",
+          "window_end": "A window may span midnight (e.g. 22:00 to 02:00)."
+        }
+      }
+    }
+  },
+  "selector": {
+    "travel_mode": {
+      "options": {
+        "drive": "Car",
+        "two_wheeler": "Motorcycle / scooter",
+        "bicycle": "Bicycle",
+        "walk": "Walking"
+      }
+    },
+    "weekdays": {
+      "options": {
+        "mon": "Monday",
+        "tue": "Tuesday",
+        "wed": "Wednesday",
+        "thu": "Thursday",
+        "fri": "Friday",
+        "sat": "Saturday",
+        "sun": "Sunday"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "fastest_duration": {
+        "name": "Fastest travel time"
+      },
+      "slowest_duration": {
+        "name": "Slowest travel time"
+      },
+      "route_duration": {
+        "name": "Route {route} travel time"
+      },
+      "route_delay": {
+        "name": "Route {route} traffic delay"
+      },
+      "route_distance": {
+        "name": "Route {route} distance"
+      }
+    }
+  },
+  "exceptions": {
+    "location_unavailable": {
+      "message": "No position available for {entity_id}."
+    },
+    "invalid_auth": {
+      "message": "Google rejected the API key: {error}"
+    },
+    "update_failed": {
+      "message": "Route query failed: {error}"
+    },
+    "entry_not_loaded": {
+      "message": "No loaded Drive Route Card entry with ID {entry_id}."
+    }
+  },
+  "services": {
+    "refresh": {
+      "name": "Refresh routes",
+      "description": "Queries the routes immediately, also outside the time window.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Route",
+          "description": "Only refresh this route. Leave empty to refresh all."
+        }
+      }
+    }
+  }
+}

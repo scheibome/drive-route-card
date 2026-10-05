@@ -1,0 +1,26 @@
+{
+  "entity": {
+    "sensor": {
+      "fastest_duration": {
+        "default": "mdi:car-clock"
+      },
+      "slowest_duration": {
+        "default": "mdi:car-clock"
+      },
+      "route_duration": {
+        "default": "mdi:map-clock"
+      },
+      "route_delay": {
+        "default": "mdi:car-brake-alert"
+      },
+      "route_distance": {
+        "default": "mdi:map-marker-distance"
+      }
+    }
+  },
+  "services": {
+    "refresh": {
+      "service": "mdi:refresh"
+    }
+  }
+}
