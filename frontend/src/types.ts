@@ -25,9 +25,9 @@ export interface DriveRouteCardConfig {
   show_legend?: boolean;
   /** Time/distance bubbles on the routes, like Google Maps. */
   show_labels?: boolean;
-  /** Any CSS color, or [r, g, b] from the editor. Defaults to the theme's primary color. */
+  /** Any CSS color, or [r, g, b] from the editor. Defaults to DEFAULT_FASTEST_COLOR (config.ts). */
   fastest_color?: string | number[];
-  /** Any CSS color, or [r, g, b] from the editor. Defaults to gray. */
+  /** Any CSS color, or [r, g, b] from the editor. Defaults to DEFAULT_ALTERNATIVE_COLOR (config.ts). */
   alternative_color?: string | number[];
   /** Initial map type; can be switched on the map unless show_controls is false. */
   map_type?: "roadmap" | "satellite" | "hybrid" | "terrain";
