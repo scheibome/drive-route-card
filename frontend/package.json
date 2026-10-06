@@ -1,6 +1,6 @@
 {
   "name": "drive-route-card",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "private": true,
   "license": "MIT",
   "description": "Lovelace card for the Drive Route Card Home Assistant integration",

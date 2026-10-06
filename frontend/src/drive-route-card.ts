@@ -13,6 +13,7 @@ import { loadGoogleMaps, onAuthFailure } from "./google-maps.ts";
 import { localize } from "./localize.ts";
 import { pickLabelPoints } from "./labels.ts";
 import { decodePolyline } from "./polyline.ts";
+import { defineElement } from "./register.ts";
 import { createRouteLabel } from "./route-label.ts";
 import { buildSketch } from "./sketch.ts";
 import {
@@ -655,9 +656,7 @@ function formatKm(meters: number, lang: string): string {
   return (meters / 1000).toLocaleString(lang, { maximumFractionDigits: 1 });
 }
 
-if (!customElements.get(CARD_TYPE)) {
-  customElements.define(CARD_TYPE, DriveRouteCard);
-
+if (defineElement(CARD_TYPE, DriveRouteCard)) {
   // The integration serves the bundle with `?v=<manifest version>`.
   const version = new URL(import.meta.url).searchParams.get("v") ?? "dev";
   console.info(
@@ -666,8 +665,8 @@ if (!customElements.get(CARD_TYPE)) {
     "color: #1a73e8; background: white; font-weight: 700",
   );
 
-  const registry = ((window as unknown as { customCards?: unknown[] }).customCards ??= []);
-  registry.push({
+  const customCards = ((window as unknown as { customCards?: unknown[] }).customCards ??= []);
+  customCards.push({
     type: CARD_TYPE,
     name: "Drive Route Card",
     description: "Shows the fastest route and alternatives between two zones.",

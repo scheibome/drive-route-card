@@ -4,6 +4,7 @@ import { property, state } from "lit/decorators.js";
 import { EDITOR_DEFAULTS, normalizeConfig, toRgb } from "./config.ts";
 import { findRouteSensors } from "./entities.ts";
 import { localize, type StringKey } from "./localize.ts";
+import { defineElement } from "./register.ts";
 import type { DriveRouteCardConfig, HomeAssistant } from "./types.ts";
 
 export const EDITOR_TYPE = "drive-route-card-editor";
@@ -162,6 +163,4 @@ class DriveRouteCardEditor extends LitElement {
   `;
 }
 
-if (!customElements.get(EDITOR_TYPE)) {
-  customElements.define(EDITOR_TYPE, DriveRouteCardEditor);
-}
+defineElement(EDITOR_TYPE, DriveRouteCardEditor);

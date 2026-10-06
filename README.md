@@ -207,7 +207,7 @@ Google rejected the browser key, and the card shows a message saying so. The exa
 
 ### "Custom element doesn't exist: drive-route-card"
 
-The browser hasn't loaded the card. This happens when the page was loaded while Home Assistant was still starting. Reload the page (F5). If the card loaded, the browser console shows `DRIVE-ROUTE-CARD` with its version.
+The browser hasn't loaded the card, for example because the page was loaded while Home Assistant was still starting. Reload the page (F5). If the card loaded, the browser console shows `DRIVE-ROUTE-CARD` with its version. Versions before 0.3.4 could also show this in Firefox after a normal page load; update the integration if that happens.
 
 The integration adds the card under *Settings → Dashboards → ⋮ → Resources* (`/drive_route_card/drive-route-card.js`) and updates the entry on every version change, so don't edit or delete it. With `resource_mode: yaml`, add the resource yourself:
 

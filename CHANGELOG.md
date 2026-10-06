@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.3.4] - 2026-10-06
+
+### Fixed
+
+- In Firefox the card sometimes still showed "Custom element doesn't exist: drive-route-card" after the page loaded. Home Assistant replaces the browser's custom element registry with a polyfill while it starts up. If the card's script ran before that, its definition went to the replaced registry. The card now registers itself again in the new one.
+
 ## [0.3.3] - 2026-10-06
 
 ### Added
@@ -74,7 +80,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Lovelace card with visual editor that draws all routes on Google Maps. It is bundled with the integration, so no extra dashboard resource is needed.
 - English and German translations.
 
-[Unreleased]: https://github.com/scheibome/drive-route-card/compare/v0.3.3...HEAD
+[Unreleased]: https://github.com/scheibome/drive-route-card/compare/v0.3.4...HEAD
+[0.3.4]: https://github.com/scheibome/drive-route-card/compare/v0.3.3...v0.3.4
 [0.3.3]: https://github.com/scheibome/drive-route-card/compare/v0.3.2...v0.3.3
 [0.3.2]: https://github.com/scheibome/drive-route-card/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/scheibome/drive-route-card/compare/v0.3.0...v0.3.1
