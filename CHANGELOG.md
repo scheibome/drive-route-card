@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.3.3] - 2026-10-06
+
+### Added
+
+- The card logs its version to the browser console, like other custom cards.
+
+### Fixed
+
+- The card sometimes showed "Custom element doesn't exist: drive-route-card" when the page had been loaded while Home Assistant was still starting. The integration now also registers the card as a dashboard resource (UI-managed resources only), which the browser loads when a dashboard opens. The resource is updated on version changes and removed with the last config entry.
+
 ## [0.3.2] - 2026-10-05
 
 ### Changed
@@ -64,7 +74,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Lovelace card with visual editor that draws all routes on Google Maps. It is bundled with the integration, so no extra dashboard resource is needed.
 - English and German translations.
 
-[Unreleased]: https://github.com/scheibome/drive-route-card/compare/v0.3.2...HEAD
+[Unreleased]: https://github.com/scheibome/drive-route-card/compare/v0.3.3...HEAD
+[0.3.3]: https://github.com/scheibome/drive-route-card/compare/v0.3.2...v0.3.3
 [0.3.2]: https://github.com/scheibome/drive-route-card/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/scheibome/drive-route-card/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/scheibome/drive-route-card/compare/v0.2.0...v0.3.0

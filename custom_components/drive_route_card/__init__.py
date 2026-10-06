@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
@@ -10,7 +11,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 from .coordinator import DriveRouteConfigEntry, DriveRouteCoordinator
-from .frontend import async_register_frontend
+from .frontend import async_register_frontend, async_remove_resource
 from .providers import GoogleRoutesProvider
 from .services import async_setup_services
 
@@ -42,3 +43,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: DriveRouteConfigEntry) -
 async def async_unload_entry(hass: HomeAssistant, entry: DriveRouteConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Remove the card resource together with the last config entry."""
+    if not hass.config_entries.async_entries(DOMAIN):
+        await async_remove_resource(hass)

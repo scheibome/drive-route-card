@@ -1,7 +1,7 @@
 {
   "domain": "drive_route_card",
   "name": "Drive Route Card",
-  "after_dependencies": ["frontend", "http"],
+  "after_dependencies": ["frontend", "http", "lovelace"],
   "codeowners": ["@scheibome"],
   "config_flow": true,
   "documentation": "https://github.com/scheibome/drive-route-card",
@@ -9,5 +9,5 @@
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/scheibome/drive-route-card/issues",
   "requirements": [],
-  "version": "0.3.2"
+  "version": "0.3.3"
 }

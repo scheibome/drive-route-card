@@ -7,7 +7,7 @@
 A Home Assistant integration that shows the current fastest route between two places together with up to two alternatives, like Google Maps does.
 
 - **Sensors** for the travel time, traffic delay and distance of each route, plus *fastest* and *slowest travel time* sensors for dashboard badges and automations.
-- **A map card** that draws all routes on a Google map, with travel time and distance on each route, live traffic, satellite view and custom map styles. The card is bundled with the integration, so you don't need to add a dashboard resource.
+- **A map card** that draws all routes on a Google map, with travel time and distance on each route, live traffic, satellite view and custom map styles. The card is bundled with the integration, which registers it as a dashboard resource itself.
 - Origin and destination can be **zones, persons or device trackers**, so a route can follow your current position.
 - **Cost control**: configurable update interval and an optional time window, e.g. only on weekdays 06:00–09:00.
 
@@ -204,6 +204,19 @@ Google rejected the browser key, and the card shows a message saying so. The exa
 | `InvalidKeyMapError` | Wrong key, often the server key | Use the browser key |
 | `BillingNotEnabledMapError` | No billing account | Link a billing account to the project |
 | `ApiTargetBlockedMapError` | The key's API restriction excludes the Maps JavaScript API | Allow the Maps JavaScript API for the key |
+
+### "Custom element doesn't exist: drive-route-card"
+
+The browser hasn't loaded the card. This happens when the page was loaded while Home Assistant was still starting. Reload the page (F5). If the card loaded, the browser console shows `DRIVE-ROUTE-CARD` with its version.
+
+The integration adds the card under *Settings → Dashboards → ⋮ → Resources* (`/drive_route_card/drive-route-card.js`) and updates the entry on every version change, so don't edit or delete it. With `resource_mode: yaml`, add the resource yourself:
+
+```yaml
+lovelace:
+  resources:
+    - url: /drive_route_card/drive-route-card.js
+      type: module
+```
 
 ### Fewer routes than in Google Maps
 

@@ -658,6 +658,14 @@ function formatKm(meters: number, lang: string): string {
 if (!customElements.get(CARD_TYPE)) {
   customElements.define(CARD_TYPE, DriveRouteCard);
 
+  // The integration serves the bundle with `?v=<manifest version>`.
+  const version = new URL(import.meta.url).searchParams.get("v") ?? "dev";
+  console.info(
+    `%c DRIVE-ROUTE-CARD %c ${version} `,
+    "color: white; background: #1a73e8; font-weight: 700",
+    "color: #1a73e8; background: white; font-weight: 700",
+  );
+
   const registry = ((window as unknown as { customCards?: unknown[] }).customCards ??= []);
   registry.push({
     type: CARD_TYPE,
