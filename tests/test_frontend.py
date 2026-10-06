@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 from homeassistant.components.lovelace.const import LOVELACE_DATA
 from homeassistant.components.lovelace.resources import (
@@ -26,7 +26,10 @@ OTHER_URL = "/hacsfiles/other-card/other-card.js"
 @pytest.fixture
 def resources(hass: HomeAssistant) -> ResourceStorageCollection:
     """Provide Lovelace with resources in storage mode."""
-    collection = ResourceStorageCollection(hass, MagicMock())
+    # Without stored resources, the collection imports them from the default
+    # dashboard config; an empty config means there is nothing to import.
+    ll_config = MagicMock(async_load=AsyncMock(return_value={}))
+    collection = ResourceStorageCollection(hass, ll_config)
     hass.data[LOVELACE_DATA] = MagicMock(resources=collection)
     hass.config.components.add("lovelace")
     return collection
